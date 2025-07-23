@@ -10,7 +10,8 @@ def home():
 
 @app.route('/extract', methods=['POST'])
 def extract():
-    video_url = request.json.get("url")
+    data = request.get_json(force=True)
+    video_url = data.get("url")
     try:
         meta_proc = subprocess.run(
             ["yt-dlp", "--list-subs", "-J", video_url],
