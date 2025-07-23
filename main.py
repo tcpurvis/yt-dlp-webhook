@@ -12,8 +12,17 @@ def home():
 @app.route('/extract', methods=['POST'])
 def extract():
     try:
+        print("Headers:", dict(request.headers))
+        print("Raw data:", request.data)
+        print("request.json:", request.json)
+
         data = request.get_json(force=True)
-        video_url = data.get("url")
+        print("Parsed JSON:", data)
+
+        if not data or "url" not in data:
+            raise ValueError("Missing or invalid 'url' in request body")
+
+        video_url = data["url"]
         print("Processing:", video_url)
 
         # Get video metadata with subtitles
