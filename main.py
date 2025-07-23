@@ -5,7 +5,6 @@ import os
 
 
 # force redeploy
-chore: trigger redeploy
 
 app = Flask(__name__)
 
