@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import subprocess
 import json
+import os
 
 app = Flask(__name__)
 
@@ -10,44 +11,22 @@ def home():
 
 @app.route('/extract', methods=['POST'])
 def extract():
-    data = request.get_json(force=True)
-    video_url = data.get("url")
     try:
-        meta_proc = subprocess.run(
-            ["yt-dlp", "--list-subs", "-J", video_url],
-            capture_output=True, text=True
-        )
-        print("STDERR:", meta_proc.stderr)
-        print("STDOUT:", meta_proc.stdout)
+        # Log input for debugging
+        print("Headers:", dict(request.headers))
+        print("Raw data:", request.data)
+        print("request.json:", request.json)
 
-        if not meta_proc.stdout.strip():
-            raise ValueError("yt-dlp returned no output")
+        data = request.get_json(force=True)
+        print("Parsed JSON:", data)
 
-        meta = json.loads(meta_proc.stdout)
-        title = meta.get("title", "No title")
-        subs = list(meta.get("subtitles", {}).keys())
+        video_url = data.get("url")
+        return jsonify({"received_url": video_url})
 
-        format_proc = subprocess.run(
-            ["yt-dlp", "-F", video_url],
-            capture_output=True, text=True
-        )
-        audio_lines = format_proc.stdout.splitlines()
-        audio_tracks = list({
-            line.split()[0] for line in audio_lines if "audio only" in line
-        })
-
-        return jsonify({
-            "url": video_url,
-            "title": title,
-            "subtitles": subs,
-            "audioTracks": audio_tracks
-        })
     except Exception as e:
+        print("Error occurred:", str(e))
         return jsonify({"error": str(e)}), 500
-
-import os
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-
