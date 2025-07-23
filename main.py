@@ -29,9 +29,11 @@ def extract():
         print("Processing:", video_url)
 
         # Get video metadata with subtitles
-        meta_proc = subprocess.run(
-            ["yt-dlp", "--cookies", "cookies.txt", "--list-subs", "-J", video_url]
-            capture_output=True, text=True
+            meta_proc = subprocess.run(
+                ["yt-dlp", "--cookies", "cookies.txt", "--list-subs", "-J", video_url],
+                capture_output=True, text=True
+            )
+
         )
         print("Meta STDERR:", meta_proc.stderr)
         print("Meta STDOUT:", meta_proc.stdout)
@@ -44,10 +46,11 @@ def extract():
         subs = list(meta.get("subtitles", {}).keys())
 
         # Get available audio formats
-        format_proc = subprocess.run(
-            ["yt-dlp", "-F", video_url],
-            capture_output=True, text=True
-        )
+            format_proc = subprocess.run(
+                ["yt-dlp", "--cookies", "cookies.txt", "-F", video_url],
+                 capture_output=True, text=True
+                )
+
         audio_lines = format_proc.stdout.splitlines()
         audio_tracks = list({
             line.split()[0]
