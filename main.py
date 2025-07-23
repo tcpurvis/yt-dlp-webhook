@@ -12,24 +12,47 @@ def home():
 @app.route('/extract', methods=['POST'])
 def extract():
     try:
-        # Log incoming headers and body for debugging
-        print("Headers:", dict(request.headers))
-        print("Raw data:", request.data)
-        print("request.json:", request.json)
-
-        # Force Flask to parse JSON
         data = request.get_json(force=True)
-        print("Parsed JSON:", data)
-
-        # Extract URL from JSON payload
         video_url = data.get("url")
+        print("Processing:", video_url)
 
-        # Respond with the URL for now (debugging)
-        return jsonify({"received_url": video_url})
+        # Get video metadata with subtitles
+        meta_proc = subprocess.run(
+            ["yt-dlp", "--list-subs", "-J", video_url],
+            capture_output=True, text=True
+        )
+        print("Meta STDERR:", meta_proc.stderr)
+        print("Meta STDOUT:", meta_proc.stdout)
+
+        if not meta_proc.stdout.strip():
+            raise ValueError("yt-dlp returned no JSON")
+
+        meta = json.loads(meta_proc.stdout)
+        title = meta.get("title", "No title")
+        subs = list(meta.get("subtitles", {}).keys())
+
+        # Get available audio formats
+        format_proc = subprocess.run(
+            ["yt-dlp", "-F", video_url],
+            capture_output=True, text=True
+        )
+        audio_lines = format_proc.stdout.splitlines()
+        audio_tracks = list({
+            line.split()[0]
+            for line in audio_lines if "audio only" in line
+        })
+
+        return jsonify({
+            "url": video_url,
+            "title": title,
+            "subtitles": subs,
+            "audioTracks": audio_tracks
+        })
 
     except Exception as e:
         print("Error occurred:", str(e))
         return jsonify({"error": str(e)}), 500
+
 
 # Required for Render to run your app
 if __name__ == "__main__":
