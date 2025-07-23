@@ -30,7 +30,7 @@ def extract():
 
         # Get video metadata with subtitles
         meta_proc = subprocess.run(
-            ["yt-dlp", "--list-subs", "-J", video_url],
+            ["yt-dlp", "--cookies", "www.youtube.com_cookies.txt", "--list-subs", "-J", video_url]
             capture_output=True, text=True
         )
         print("Meta STDERR:", meta_proc.stderr)
